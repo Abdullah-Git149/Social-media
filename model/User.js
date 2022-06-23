@@ -29,11 +29,15 @@ const userSchema = mongoose.Schema({
     ],
     following: [
         { type: mongoose.Schema.Types.ObjectId, ref: "User" }
-    ]
+    ],
+    user_authentication: {
+        type: String,
+        default: null
+    }
 })
 
 userSchema.pre("save", async function (next) {
-    if (this.isModified()) {
+    if (this.isModified("password")) {
 
         this.password = await bcrypt.hash(this.password, 10)
     }
@@ -43,7 +47,7 @@ userSchema.pre("save", async function (next) {
 userSchema.methods.generateAuthToken = async function () {
     const user = this
     const token = await jwt.sign({ user }, process.env.KEY)
-  
+    user.user_authentication = token
     await user.save()
     return token
 }
